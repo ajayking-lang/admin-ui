@@ -1,98 +1,120 @@
+
 <!DOCTYPE html>
 <html>
 <head>
   <title>Admin Panel</title>
   <style>
     body {
-      background: #121212; color: #fff; font-family: Arial; padding: 20px;
+      background: #121212;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
     }
     .card {
-      background: #1e1e1e; border-radius: 12px; padding: 15px; margin-bottom: 15px;
+      background: #1e1e1e;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
       box-shadow: 0 0 10px #000;
     }
     input, button {
-      padding: 10px; border-radius: 6px; border: none;
+      padding: 10px;
       margin: 5px 0;
-      width: 100%;
+      border: none;
+      border-radius: 6px;
     }
-    button { background: #03dac6; color: #000; cursor: pointer; }
-    #status {
-      background: #222; padding: 10px; margin-top: 10px;
-      border-radius: 6px; font-size: 14px;
+    button {
+      background: #03dac6;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .device-list {
+      margin-top: 10px;
+    }
+    .device {
+      background: #2c2c2c;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 6px;
     }
   </style>
 </head>
 <body>
   <h1>Admin Panel</h1>
-
   <div class="card">
     <h3>Add Device</h3>
     <input id="id" placeholder="Device ID"><br>
     <input id="name" placeholder="Device Name"><br>
     <input id="version" placeholder="Version"><br>
-    <button onclick="addDevice()">Add Device</button>
+    <button onclick="addDevice()">Add</button>
   </div>
 
   <div class="card">
     <h3>Send SMS</h3>
     <input id="to" placeholder="Device ID"><br>
     <input id="msg" placeholder="Message"><br>
-    <button onclick="sendSMS()">Send SMS</button>
+    <button onclick="sendSMS()">Send</button>
   </div>
 
-  <div id="status">Status: Ready</div>
+  <div class="card">
+    <h3>Devices</h3>
+    <div id="devices" class="device-list"></div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    // Optional: if running on a different port or IP
-    // const socket = io("http://192.168.72.160:3000");
-    const socket = io(); 
+    const socket = io();
+    let data = {};
 
-    function showStatus(msg, success = true) {
-      const status = document.getElementById("status");
-      status.textContent = `Status: ${msg}`;
-      status.style.color = success ? "#0f0" : "#f55";
-    }
+    socket.on('update', d => {
+      data = d;
+      renderDevices();
+    });
 
     function addDevice() {
-      const id = document.getElementById('id').value.trim();
-      const name = document.getElementById('name').value.trim();
-      const version = document.getElementById('version').value.trim();
-
-      if (!id || !name || !version) {
-        showStatus("All fields are required.", false);
-        return;
-      }
-
       fetch('/api/devices/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name, version })
-      }).then(res => res.json())
-        .then(res => {
-          if (res.ok) showStatus("Device added successfully.");
-          else showStatus("Failed to add device.", false);
-        }).catch(() => showStatus("Server error.", false));
+        body: JSON.stringify({
+          id: document.getElementById('id').value,
+          name: document.getElementById('name').value,
+          version: document.getElementById('version').value
+        })
+      });
     }
 
     function sendSMS() {
-      const deviceId = document.getElementById('to').value.trim();
-      const message = document.getElementById('msg').value.trim();
-
-      if (!deviceId || !message) {
-        showStatus("Device ID and message are required.", false);
-        return;
-      }
-
       fetch('/api/sms/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deviceId, message })
-      }).then(res => res.json())
-        .then(res => {
-          if (res.ok) showStatus("SMS sent successfully.");
-          else showStatus("Failed to send SMS.", false);
-        }).catch(() => showStatus("Server error.", false));
+        body: JSON.stringify({
+          deviceId: document.getElementById('to').value,
+          message: document.getElementById('msg').value
+        })
+      });
+    }
+
+    function removeDevice(id) {
+      fetch('/api/devices/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+    }
+
+    function renderDevices() {
+      const container = document.getElementById('devices');
+      container.innerHTML = '';
+      for (const id in data.devices) {
+        const dev = data.devices[id];
+        container.innerHTML += `
+          <div class="device">
+            <b>${id}</b> - ${dev.name} (v${dev.version}) - <i>${dev.status}</i>
+            <button onclick="removeDevice('${id}')">Remove</button>
+          </div>
+        `;
+      }
     }
   </script>
 </body>
