@@ -1,0 +1,8 @@
+{
+  "admin": {
+    "user": "admin",
+    "pass": "admin123"
+  },
+  "devices": {},
+  "sms": {}
+}

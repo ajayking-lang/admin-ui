@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login</title>
+  <style>
+    body {
+      background: #121212; color: #fff; font-family: sans-serif;
+      display: flex; justify-content: center; align-items: center; height: 100vh;
+    }
+    .card {
+      background: #1e1e1e; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px #000;
+    }
+    input, button {
+      display: block; margin: 10px 0; padding: 10px;
+      width: 100%; border-radius: 5px; border: none;
+    }
+    button { background: #03dac6; color: #000; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <form method="POST" action="/login" class="card">
+    <h2>Admin Login</h2>
+    <input name="user" placeholder="Username">
+    <input name="pass" type="password" placeholder="Password">
+    <button>Login</button>
+  </form>
+</body>
+</html>
